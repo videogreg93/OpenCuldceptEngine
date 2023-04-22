@@ -13,6 +13,7 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     implementation("io.arrow-kt:arrow-core:1.2.0-RC")
+    implementation("com.tinder.statemachine:statemachine:0.2.0")
 }
 
 tasks.test {

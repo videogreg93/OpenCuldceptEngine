@@ -1,6 +1,11 @@
 package engine.battle
 
 import arrow.core.Either
+import arrow.core.None
+import com.tinder.StateMachine
+import engine.battle.state.BattleStateMachine
+import engine.battle.state.BattleStateMachine.Action
+import engine.battle.state.BattleStateMachine.State
 import models.cards.creature.CreatureCard
 import models.cards.effects.CardEffect
 import models.cards.item.ItemCard
@@ -15,6 +20,30 @@ class Battle(
 
     // Add snapshot to each step (creature state, items, etc)
     val steps = ArrayList<BattleStep>()
+
+    val stateMachine = StateMachine.create<State, Action, None> {
+        initialState(State.AttackerChooseItem)
+        state<State.AttackerChooseItem> {
+            on<Action.AttackerChooseItem> {
+                attackerItem = it.itemCard
+                it.itemCard.leftOrNull()?.setOwnerForEffects(attacker)
+                transitionTo(State.DefenderChooseItem)
+            }
+        }
+        state<State.DefenderChooseItem> {
+            on<Action.DefenderChooseItem> {
+                defenderItem = it.itemCard
+                it.itemCard.leftOrNull()?.setOwnerForEffects(defender)
+                transitionTo(State.CalculateAttackOrder)
+            }
+        }
+
+        state<State.CalculateAttackOrder> {
+            onEnter {
+                // TODO calculate
+            }
+        }
+    }
 
     fun setAttackerItemCard(card: Either<ItemCard, ItemCard.EmptyItemCard>) {
         attackerItem = card
