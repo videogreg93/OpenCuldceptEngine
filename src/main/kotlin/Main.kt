@@ -1,29 +1,35 @@
 import arrow.core.Either
 import engine.CuldceptEngine
 import models.cards.creature.CreatureCard
+import models.cards.effects.CardEffect
 import models.cards.item.ItemCard
 
 fun main(args: Array<String>) {
     val engine = CuldceptEngine()
     val battle = engine.startBattle(
         CreatureCard(
-            "test",
+            "Test Attacker",
             50,
-            90,
+            100,
             "",
             emptyList(),
             10,
             1
-        ),
+        ).apply {
+            addEffect(CardEffect.AttackLast)
+        },
         CreatureCard(
-            "test",
+            "test defender",
             50,
-            60,
+            50,
             "",
             emptyList(),
             10,
             1
-        )
+        ).apply {
+           addEffect(CardEffect.AttackFirst)
+            addEffect(CardEffect.BattleStart(CardEffect.ModifyOwnerAttack(100)))
+        }
     )
     battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
     battle.setDefenderItemCard(Either.Right(ItemCard.EmptyItemCard))
