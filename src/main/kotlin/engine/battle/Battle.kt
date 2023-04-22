@@ -73,6 +73,7 @@ class Battle(
                     steps.addAll(it.trigger(orderedCreatures.first))
                 }
                 // Modify values (equipped item effects)
+                // TODO doing it like this doesnt work for items that add 'attack first' we should add a separate list for 'added effects' to creatures and add the effect there
                 attackerItem?.leftOrNull()?.effects.orEmpty().filterIsInstance<CardEffect.BattleStart>().forEach {
                     steps.addAll(it.trigger(orderedCreatures.second))
                 }

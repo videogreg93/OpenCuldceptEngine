@@ -16,7 +16,7 @@ fun main(args: Array<String>) {
             10,
             1
         ).apply {
-            addEffect(CardEffect.AttackLast)
+          //  addEffect(CardEffect.AttackLast)
         },
         CreatureCard(
             "test defender",
@@ -27,12 +27,18 @@ fun main(args: Array<String>) {
             10,
             1
         ).apply {
-           addEffect(CardEffect.AttackFirst)
-            addEffect(CardEffect.BattleStart(CardEffect.ModifyOwnerAttack(100)))
+          //  addEffect(CardEffect.AttackFirst)
         }
     )
+    val defenderItem = ItemCard(
+        "Sword",
+        100,
+        1
+    ).apply {
+        addEffect(CardEffect.BattleStart(CardEffect.ModifyOwnerAttack(100)))
+    }
     battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
-    battle.setDefenderItemCard(Either.Right(ItemCard.EmptyItemCard))
+    battle.setDefenderItemCard(Either.Left(defenderItem))
     val result = battle.fight()
     result.getOrNull()?.let {
         it.steps.forEach {
