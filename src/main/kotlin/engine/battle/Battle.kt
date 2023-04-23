@@ -3,7 +3,6 @@ package engine.battle
 import arrow.core.Either
 import arrow.core.None
 import com.tinder.StateMachine
-import engine.battle.state.BattleStateMachine
 import engine.battle.state.BattleStateMachine.Action
 import engine.battle.state.BattleStateMachine.State
 import models.cards.creature.CreatureCard
@@ -20,27 +19,109 @@ class Battle(
 
     // Add snapshot to each step (creature state, items, etc)
     val steps = ArrayList<BattleStep>()
+    var result: Either<BattleError, BattleResult>? = null
 
     val stateMachine = StateMachine.create<State, Action, None> {
         initialState(State.AttackerChooseItem)
         state<State.AttackerChooseItem> {
             on<Action.AttackerChooseItem> {
                 attackerItem = it.itemCard
-                it.itemCard.leftOrNull()?.setOwnerForEffects(attacker)
+                it.itemCard.leftOrNull()?.let {
+                    it.setOwnerForEffects(attacker)
+                    attacker.addedEffects.addAll(it.effects)
+                }
                 transitionTo(State.DefenderChooseItem)
             }
         }
         state<State.DefenderChooseItem> {
             on<Action.DefenderChooseItem> {
                 defenderItem = it.itemCard
-                it.itemCard.leftOrNull()?.setOwnerForEffects(defender)
+                it.itemCard.leftOrNull()?.let {
+                    it.setOwnerForEffects(defender)
+                    defender.addedEffects.addAll(it.effects)
+                }
                 transitionTo(State.CalculateAttackOrder)
             }
         }
 
         state<State.CalculateAttackOrder> {
             onEnter {
-                // TODO calculate
+                val orderedCreatures = calculateOrdering(attacker, defender)
+                transitionTo(State.BattleStartEffects(orderedCreatures.first, orderedCreatures.second))
+            }
+        }
+
+        state<State.BattleStartEffects> {
+            onEnter {
+                first.effects.filterIsInstance<CardEffect.BattleStart>().forEach {
+                    steps.addAll(it.trigger(second))
+                }
+                second.effects.filterIsInstance<CardEffect.BattleStart>().forEach {
+                    steps.addAll(it.trigger(first))
+                }
+                transitionTo(State.FirstAttack(first, second))
+            }
+        }
+
+        state<State.FirstAttack> {
+            onEnter {
+                // Proceed with battle
+                steps.add(
+                    BattleStep.CardAttacks(
+                        first,
+                        first.currentStrength,
+                        first == attacker
+                    )
+                )
+                second.currentHP -= first.currentStrength
+                val result = if (second.currentHP <= 0) {
+                    steps.add(
+                        BattleStep.CardDefeated(second)
+                    )
+                    Either.Right(
+                        BattleResult(
+                            steps,
+                            if (first == attacker) {
+                                BattleResult.EndResult.ATTACKER_WINS
+                            } else {
+                                BattleResult.EndResult.DEFENDER_WINS
+                            }
+                        )
+                    )
+                } else {
+                    steps.add(
+                        BattleStep.CardAttacks(
+                            second,
+                            second.currentStrength,
+                            second == attacker
+                        )
+                    )
+                    first.currentHP -= second.currentStrength
+                    if (first.currentHP <= 0) {
+                        steps.add(
+                            BattleStep.CardDefeated(first)
+                        )
+                        Either.Right(
+                            BattleResult(
+                                steps, if (second == defender) {
+                                    BattleResult.EndResult.DEFENDER_WINS
+                                } else {
+                                    BattleResult.EndResult.ATTACKER_WINS
+                                }
+                            )
+                        )
+                    } else {
+                        Either.Right(BattleResult(steps, BattleResult.EndResult.STALEMATE))
+                    }
+                }
+                this@Battle.result = result
+                transitionTo(State.Cleanup)
+            }
+        }
+
+        state<State.Cleanup> {
+            onEnter {
+                cleanup()
             }
         }
     }
@@ -88,6 +169,8 @@ class Battle(
      * Proceed with the fight. Must have called [setAttackerItemCard] & [setDefenderItemCard] otherwise will fail
      */
     fun fight(): Either<BattleError, BattleResult> {
+        attacker.addedEffects.addAll(attackerItem?.leftOrNull()?.effects.orEmpty())
+        defender.addedEffects.addAll(defenderItem?.leftOrNull()?.effects.orEmpty())
         val result = when {
             attackerItem == null -> Either.Left(BattleError.NoAttackerItemDefined)
             defenderItem == null -> Either.Left(BattleError.NoDefenderItemDefined)
@@ -95,18 +178,10 @@ class Battle(
                 val orderedCreatures = calculateOrdering(attacker, defender)
 
                 // Modify Values (creature innate values)
-                orderedCreatures.first.effects.filterIsInstance<CardEffect.BattleStart>().forEach {
+                orderedCreatures.first.allEffects.filterIsInstance<CardEffect.BattleStart>().forEach {
                     steps.addAll(it.trigger(orderedCreatures.second))
                 }
-                orderedCreatures.second.effects.filterIsInstance<CardEffect.BattleStart>().forEach {
-                    steps.addAll(it.trigger(orderedCreatures.first))
-                }
-                // Modify values (equipped item effects)
-                // TODO doing it like this doesnt work for items that add 'attack first' we should add a separate list for 'added effects' to creatures and add the effect there
-                attackerItem?.leftOrNull()?.effects.orEmpty().filterIsInstance<CardEffect.BattleStart>().forEach {
-                    steps.addAll(it.trigger(orderedCreatures.second))
-                }
-                defenderItem?.leftOrNull()?.effects.orEmpty().filterIsInstance<CardEffect.BattleStart>().forEach {
+                orderedCreatures.second.allEffects.filterIsInstance<CardEffect.BattleStart>().forEach {
                     steps.addAll(it.trigger(orderedCreatures.first))
                 }
                 // Proceed with battle

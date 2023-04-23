@@ -14,6 +14,9 @@ class CreatureCard(
     override val baseRarity: Int
 ): Card() {
     val effects = ArrayList<CardEffect>()
+    val addedEffects = ArrayList<CardEffect>()
+    val allEffects: List<CardEffect>
+        get() = effects + addedEffects
     var currentHP: Int = baseMHP
     var currentStrength = baseStrength
 
@@ -29,7 +32,7 @@ class CreatureCard(
 
 
     inline fun <reified T: CardEffect> hasEffect(): Boolean {
-        return effects.any { it is T }
+        return allEffects.any { it is T }
     }
 
     fun addEffect(effect: CardEffect) {

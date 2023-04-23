@@ -1,6 +1,7 @@
 package engine.battle.state
 
 import arrow.core.Either
+import models.cards.creature.CreatureCard
 import models.cards.item.ItemCard
 
 object BattleStateMachine {
@@ -8,7 +9,9 @@ object BattleStateMachine {
         object AttackerChooseItem: State()
         object DefenderChooseItem: State()
         object CalculateAttackOrder: State()
-        object FirstAttack: State()
+        class BattleStartEffects(val first: CreatureCard, val second: CreatureCard): State()
+        class FirstAttack(val first: CreatureCard, val second: CreatureCard): State()
+        object Cleanup: State()
     }
 
     sealed class Action {

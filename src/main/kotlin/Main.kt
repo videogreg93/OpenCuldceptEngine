@@ -1,5 +1,6 @@
 import arrow.core.Either
 import engine.CuldceptEngine
+import engine.battle.state.BattleStateMachine
 import models.cards.creature.CreatureCard
 import models.cards.effects.CardEffect
 import models.cards.item.ItemCard
@@ -36,6 +37,7 @@ fun main(args: Array<String>) {
         1
     ).apply {
         addEffect(CardEffect.BattleStart(CardEffect.ModifyOwnerAttack(100)))
+        addEffect(CardEffect.AttackFirst)
     }
     battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
     battle.setDefenderItemCard(Either.Left(defenderItem))
