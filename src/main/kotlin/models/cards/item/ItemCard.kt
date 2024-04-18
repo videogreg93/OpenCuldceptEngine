@@ -8,6 +8,7 @@ class ItemCard(
     override val name: String,
     override val baseCost: Int,
     override val baseRarity: Int,
+    val type: ItemType = ItemType.Weapon
 ): Card() {
     val effects: ArrayList<CardEffect> = ArrayList()
 

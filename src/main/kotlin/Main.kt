@@ -1,46 +1,46 @@
 import arrow.core.Either
 import engine.CuldceptEngine
-import engine.battle.state.BattleStateMachine
+import models.cards.buckler
 import models.cards.creature.CreatureCard
-import models.cards.effects.CardEffect
+import models.cards.creature.CreatureElement
+import models.cards.fireShield
 import models.cards.item.ItemCard
+import models.cards.item.ItemType
+import models.player.Player
 
 fun main(args: Array<String>) {
     val engine = CuldceptEngine()
+    val player1 = Player("Player One", 100)
+    val player2 = Player("Player Two", 100)
+    engine.addPlayer(player1)
+    engine.addPlayer(player2)
     val battle = engine.startBattle(
         CreatureCard(
             "Test Attacker",
-            50,
-            100,
+            30,
+            40,
             "",
+            listOf(),
             emptyList(),
             10,
             1
-        ).apply {
-          //  addEffect(CardEffect.AttackLast)
-        },
+        ),
         CreatureCard(
             "test defender",
             50,
-            50,
+            10,
             "",
+            listOf(),
             emptyList(),
             10,
             1
-        ).apply {
-          //  addEffect(CardEffect.AttackFirst)
-        }
+        ),
+        player1,
+        player2
     )
-    val defenderItem = ItemCard(
-        "Sword",
-        100,
-        1
-    ).apply {
-        addEffect(CardEffect.BattleStart(CardEffect.ModifyOwnerAttack(100)))
-        addEffect(CardEffect.AttackFirst)
-    }
+    player2.addCardToHand(fireShield)
     battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
-    battle.setDefenderItemCard(Either.Left(defenderItem))
+    battle.setDefenderItemCard(Either.Left(fireShield))
     val result = battle.fight()
     result.getOrNull()?.let {
         it.steps.forEach {
