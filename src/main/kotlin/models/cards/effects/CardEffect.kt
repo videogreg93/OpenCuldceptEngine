@@ -8,12 +8,24 @@ import models.cards.creature.CreatureCard
 sealed class CardEffect(open val description: String) {
     var source: Card? = null
     var owner: CreatureCard? = null
+    // TODO this isnt used now, need to find a sure way of setting this correctly during fight
+    lateinit var dataSet: DataSet
     open val priority: Int = 0 // lower priority = triggered first
 
     open fun trigger(opponent: CreatureCard): List<BattleStep> = emptyList()
 
-    object AttackFirst : CardEffect("Attack First")
-    object AttackLast : CardEffect("Attack Last")
+    class AttackFirst : CardEffect("Attack First") {
+        override fun trigger(opponent: CreatureCard): List<BattleStep> {
+            owner?.attackFirst = true
+            return super.trigger(opponent)
+        }
+    }
+    class AttackLast : CardEffect("Attack Last") {
+        override fun trigger(opponent: CreatureCard): List<BattleStep> {
+            owner?.attackLast = true
+            return super.trigger(opponent)
+        }
+    }
 
     // Timing Effects
     abstract class TimingEffect(val effect: CardEffect, description: String): CardEffect(description) {
@@ -44,14 +56,6 @@ sealed class CardEffect(open val description: String) {
     class EndOfBattle2(effect: CardEffect): TimingEffect(effect, "End of Battle, second phase")
     class UponDefeat2(effect: CardEffect): TimingEffect(effect, "Upon Defeat, second phase")
     class UponVictory(effect: CardEffect): TimingEffect(effect, "Upon Victory")
-
-    class BattleStart(val effect: CardEffect) : CardEffect("On Battle Start") {
-        override fun trigger(opponent: CreatureCard): List<BattleStep> {
-            effect.owner = owner
-            effect.source = source
-            return effect.trigger(opponent)
-        }
-    }
 
     class BattleEnd(val effect: CardEffect) : CardEffect("On Battle End") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {

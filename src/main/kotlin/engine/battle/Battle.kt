@@ -119,7 +119,7 @@ class Battle(
             attackerItem == null -> Either.Left(BattleError.NoAttackerItemDefined)
             defenderItem == null -> Either.Left(BattleError.NoDefenderItemDefined)
             else -> {
-                val orderedCreatures = calculateOrdering(attacker, defender)
+                var orderedCreatures = calculateOrdering(attacker, defender)
 
                 // Modify values before battle
                 orderedCreatures.first.allEffects.filterIsInstance<CardEffect.BeforeBattle>().forEach {
@@ -128,14 +128,9 @@ class Battle(
                 orderedCreatures.second.allEffects.filterIsInstance<CardEffect.BeforeBattle>().forEach {
                     steps.addAll(it.trigger(orderedCreatures.first))
                 }
+                // Ordering might change because of before battle effects (attacks first, attacks last)
+                orderedCreatures = calculateOrdering(attacker, defender)
 
-                // Modify Values (creature innate values/battle start)
-                orderedCreatures.first.allEffects.filterIsInstance<CardEffect.BattleStart>().forEach {
-                    steps.addAll(it.trigger(orderedCreatures.second))
-                }
-                orderedCreatures.second.allEffects.filterIsInstance<CardEffect.BattleStart>().forEach {
-                    steps.addAll(it.trigger(orderedCreatures.first))
-                }
                 // Proceed with battle
                 steps.add(
                     BattleStep.CardAttacks(

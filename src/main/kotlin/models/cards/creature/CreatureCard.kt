@@ -38,15 +38,9 @@ class CreatureCard(
         CardEffect.landBonus(this)
     }
 
-    val attackFirst: Boolean
-        get() {
-            return hasEffect<CardEffect.AttackFirst>()
-        }
+    var attackFirst: Boolean = false
 
-    val attackLast: Boolean
-        get() {
-            return hasEffect<CardEffect.AttackLast>()
-        }
+    var attackLast: Boolean = false
 
     fun hasElement(e: CreatureElement): Boolean {
         return element.contains(e)

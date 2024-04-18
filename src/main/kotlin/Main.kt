@@ -3,6 +3,7 @@ import engine.CuldceptEngine
 import models.cards.buckler
 import models.cards.creature.CreatureCard
 import models.cards.creature.CreatureElement
+import models.cards.effects.CardEffect
 import models.cards.fireShield
 import models.cards.item.ItemCard
 import models.cards.item.ItemType
@@ -24,7 +25,9 @@ fun main(args: Array<String>) {
             emptyList(),
             10,
             1
-        ),
+        ).apply {
+
+        },
         CreatureCard(
             "test defender",
             50,
@@ -34,14 +37,16 @@ fun main(args: Array<String>) {
             emptyList(),
             10,
             1
-        ),
+        ).apply {
+
+        },
         player1,
         player2
     )
     player2.addCardToHand(buckler)
     battle.goToItemSelection()
     battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
-    battle.setDefenderItemCard(Either.Left(buckler))
+    battle.setDefenderItemCard(Either.Right(ItemCard.EmptyItemCard))
     val result = battle.fight()
     result.getOrNull()?.let {
         it.steps.forEach {
