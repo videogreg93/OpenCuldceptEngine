@@ -68,3 +68,16 @@ val fireShield = ItemCard(
         )
     )
 }
+
+val angryMask = ItemCard(
+    "Angry Mask",
+    10,
+    1,
+    type = ItemType.Tool
+).apply {
+    addEffect(
+        CardEffect.BattleEnd(
+            CardEffect.ModifyOpponentHealth(IntCalculation.Constant(-100))
+        )
+    )
+}

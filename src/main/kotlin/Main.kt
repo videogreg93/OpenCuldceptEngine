@@ -1,5 +1,6 @@
 import arrow.core.Either
 import engine.CuldceptEngine
+import models.cards.angryMask
 import models.cards.buckler
 import models.cards.creature.CreatureCard
 import models.cards.creature.CreatureElement
@@ -43,10 +44,10 @@ fun main(args: Array<String>) {
         player1,
         player2
     )
-    player2.addCardToHand(buckler)
+    player2.addCardToHand(angryMask)
     battle.goToItemSelection()
     battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
-    battle.setDefenderItemCard(Either.Right(ItemCard.EmptyItemCard))
+    battle.setDefenderItemCard(Either.Left(angryMask))
     val result = battle.fight()
     result.getOrNull()?.let {
         it.steps.forEach {

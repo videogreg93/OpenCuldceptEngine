@@ -37,6 +37,7 @@ sealed class CardEffect(open val description: String) {
     }
 
     // Before Combat
+    // See here for timing information https://www.culdceptcentral.com/culdcept-revolt/culdcept-revolt-guides/culdcept-revolt-battle-timetable
 
     class BeforeItemSelection(effect: CardEffect): TimingEffect(effect, "Before Item Selection")
     class DuringItemSelection(effect: CardEffect): TimingEffect(effect, "During Item Selection")
@@ -113,6 +114,19 @@ sealed class CardEffect(open val description: String) {
                 it.currentHP += value
                 listOf(BattleStep.ModifyHealth(it, it.currentHP, value, source))
             } ?: error("No owner found for $this")
+        }
+    }
+
+    class ModifyOpponentHealth(val amount: IntCalculation) : CardEffect("") {
+        override val description: String
+            get() = "Modify opponent's health by ${amount.simpleAmount}"
+
+        override fun trigger(opponent: CreatureCard): List<BattleStep> {
+            return opponent.let {
+                val value = amount.calculate(DataSet(owner, opponent))
+                it.currentHP += value
+                listOf(BattleStep.ModifyHealth(it, it.currentHP, value, source))
+            }
         }
     }
 
