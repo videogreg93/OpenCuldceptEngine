@@ -11,8 +11,14 @@ repositories {
     mavenCentral()
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
-    testImplementation(kotlin("test"))
+    //testImplementation(kotlin("test"))
+    testImplementation("io.kotest:kotest-runner-junit5:5.8")
+    testImplementation("io.kotest:kotest-assertions-core:5.8")
     implementation("io.arrow-kt:arrow-core:1.2.0-RC")
     implementation("com.tinder.statemachine:statemachine:0.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")

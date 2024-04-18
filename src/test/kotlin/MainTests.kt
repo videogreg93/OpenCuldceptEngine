@@ -1,0 +1,1 @@
+class MainTests: StringSpec()

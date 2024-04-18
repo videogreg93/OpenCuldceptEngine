@@ -145,6 +145,7 @@ class Battle(
                 orderedCreatures.first.allEffects.filterIsInstance<CardEffect.AttackBonus>().forEach {
                     steps.addAll(it.trigger(orderedCreatures.second))
                 }
+                // todo Any hp == 0 should go to end of battle effects before checking who won or lost
                 if (orderedCreatures.second.currentHP <= 0) {
                     handleDefenderDefeated(orderedCreatures)
                 } else if (orderedCreatures.first.currentHP <= 0) {
