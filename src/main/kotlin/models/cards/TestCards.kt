@@ -75,9 +75,10 @@ val angryMask = ItemCard(
     1,
     type = ItemType.Tool
 ).apply {
+    addEffect(CardEffect.BeforeBattle(CardEffect.ModifyOwnerHealth(30.toConstantCalculation())))
     addEffect(
         CardEffect.BattleEnd(
-            CardEffect.ModifyOpponentHealth(IntCalculation.Constant(-100))
+            CardEffect.ModifyOpponentHealth(IntCalculation.Inverted(IntCalculation.OpponentDamageDealt))
         )
     )
 }

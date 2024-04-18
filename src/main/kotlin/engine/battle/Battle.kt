@@ -18,10 +18,19 @@ class Battle(
     var attackerItem: Either<ItemCard, ItemCard.EmptyItemCard>? = null
     var defenderItem: Either<ItemCard, ItemCard.EmptyItemCard>? = null
 
+    val creatureSpecificValues = mapOf(
+        attacker to CreatureSpecificValues(),
+        defender to CreatureSpecificValues(),
+    )
+
     // Add snapshot to each step (creature state, items, etc)
     val steps = ArrayList<BattleStep>()
     var result: Either<BattleError, BattleResult>? = null
     private var canSelectItems = false
+
+    // TODO this seems too specific
+    private var damageDealtAttacker = 0
+    private var damageDealtDefender = 0
 
     fun setAttackerItemCard(card: Either<ItemCard, ItemCard.EmptyItemCard>) {
         when (card) {
@@ -109,6 +118,7 @@ class Battle(
      */
     fun fight(): Either<BattleError, BattleResult> {
         if (!canSelectItems) return Either.Left(BattleError.ItemSelectionNotTriggered)
+        currentBattle = this
         attacker.addedEffects.addAll(attackerItem?.leftOrNull()?.effects.orEmpty())
         defender.addedEffects.addAll(defenderItem?.leftOrNull()?.effects.orEmpty())
         val result = when {
@@ -229,6 +239,7 @@ class Battle(
                 defender.currentHP -= defender.currentLandHPBonus
             }
             defender.currentHP -= finalStrength.toInt()
+            creatureSpecificValues.getValue(attacker).damageDealt = finalStrength.toInt()
         }
         if (attacker.hasBattleEffect<BattleEffects.Neutralized>()) {
             steps.add(BattleStep.NeutralizedAttackFailed(attacker))
@@ -250,6 +261,11 @@ class Battle(
         defenderItem?.leftOrNull()?.resetOwner()
         attacker.resetValues()
         defender.resetValues()
+        Battle.currentBattle = null
+    }
+
+    companion object {
+        var currentBattle: Battle? = null
     }
 
 }

@@ -25,6 +25,15 @@ sealed class IntCalculation {
         }
     }
 
+    class Inverted(val original: IntCalculation): IntCalculation() {
+        override val simpleAmount: String
+            get() = "inverted"
+
+        override fun calculate(dataSet: DataSet): Int {
+            return -1 * original.calculate(dataSet)
+        }
+    }
+
     // TODO maybe we can use reflection to state a variable of [CreatureCard] instead of having seperate classes for each variable
     object OwnerMHP : IntCalculation() {
         override val simpleAmount: String
@@ -50,6 +59,15 @@ sealed class IntCalculation {
 
         override fun calculate(dataSet: DataSet): Int {
             return dataSet.opponentCreature?.baseStrength ?: error("No opponent card found")
+        }
+    }
+
+    object OpponentDamageDealt : IntCalculation() {
+        override val simpleAmount: String
+            get() = "Damage opponent dealt"
+
+        override fun calculate(dataSet: DataSet): Int {
+            return dataSet.damageOpponentDealt
         }
     }
 

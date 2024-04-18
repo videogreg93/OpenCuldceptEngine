@@ -26,8 +26,8 @@ fun main(args: Array<String>) {
         },
         CreatureCard(
             "test defender",
-            50,
-            10,
+            30,
+            100,
             "",
             listOf(),
             emptyList(),

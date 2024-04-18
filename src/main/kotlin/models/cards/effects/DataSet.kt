@@ -1,5 +1,6 @@
 package models.cards.effects
 
+import engine.battle.Battle
 import models.cards.creature.CreatureCard
 import models.player.Player
 
@@ -11,4 +12,7 @@ data class DataSet(
     val opponentCreature: CreatureCard? = null,
     val owningPlayer: Player? = null,
     val opponentPlayer: Player? = null,
-)
+) {
+    val damageOpponentDealt: Int
+        get() = Battle.currentBattle?.creatureSpecificValues?.get(opponentCreature)?.damageDealt ?: 0
+}
