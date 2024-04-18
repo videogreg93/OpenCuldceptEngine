@@ -47,4 +47,5 @@ sealed class BattleStep(open val description: String = "") {
     class Penetrates(target: CreatureCard) : BattleStep("${target.name} will penetrate")
     class CriticalHitBonus(target: CreatureCard) : BattleStep("${target.name} has critical hit")
     class DiscardedCards(target: Player, initialAmount: Int, amountDiscarded: Int): BattleStep("${target.name} ($initialAmount cards in hand) discarded $amountDiscarded cards.")
+    class DrawCards(target: Player, amount: Int): BattleStep("${target.name} drew $amount cards from deck")
 }

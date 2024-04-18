@@ -8,6 +8,7 @@ import models.cards.creature.CreatureCard
 sealed class CardEffect(open val description: String) {
     var source: Card? = null
     var owner: CreatureCard? = null
+
     // TODO this isnt used now, need to find a sure way of setting this correctly during fight
     lateinit var dataSet: DataSet
     open val priority: Int = 0 // lower priority = triggered first
@@ -20,6 +21,7 @@ sealed class CardEffect(open val description: String) {
             return super.trigger(opponent)
         }
     }
+
     class AttackLast : CardEffect("Attack Last") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             owner?.attackLast = true
@@ -28,7 +30,7 @@ sealed class CardEffect(open val description: String) {
     }
 
     // Timing Effects
-    abstract class TimingEffect(val effect: CardEffect, description: String): CardEffect(description) {
+    abstract class TimingEffect(val effect: CardEffect, description: String) : CardEffect(description) {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             effect.owner = owner
             effect.source = source
@@ -39,24 +41,24 @@ sealed class CardEffect(open val description: String) {
     // Before Combat
     // See here for timing information https://www.culdceptcentral.com/culdcept-revolt/culdcept-revolt-guides/culdcept-revolt-battle-timetable
 
-    class BeforeItemSelection(effect: CardEffect): TimingEffect(effect, "Before Item Selection")
-    class DuringItemSelection(effect: CardEffect): TimingEffect(effect, "During Item Selection")
-    class BeforeBattle(effect: CardEffect): TimingEffect(effect, "Before Battle")
+    class BeforeItemSelection(effect: CardEffect) : TimingEffect(effect, "Before Item Selection")
+    class DuringItemSelection(effect: CardEffect) : TimingEffect(effect, "During Item Selection")
+    class BeforeBattle(effect: CardEffect) : TimingEffect(effect, "Before Battle")
 
     // Combat Timing Effects
 
-    class BeforeAttackPhase(effect: CardEffect): TimingEffect(effect, "Before Attack Phase")
-    class BeforeDamageCalculation(effect: CardEffect): TimingEffect(effect, "Before Damage Calculation")
-    class OnSuccessfulAttack(effect: CardEffect): TimingEffect(effect, "On Successful Attack")
-    class OnFailedAttack(effect: CardEffect): TimingEffect(effect, "On Failed Attack")
+    class BeforeAttackPhase(effect: CardEffect) : TimingEffect(effect, "Before Attack Phase")
+    class BeforeDamageCalculation(effect: CardEffect) : TimingEffect(effect, "Before Damage Calculation")
+    class OnSuccessfulAttack(effect: CardEffect) : TimingEffect(effect, "On Successful Attack")
+    class OnFailedAttack(effect: CardEffect) : TimingEffect(effect, "On Failed Attack")
 
     // End of Battle
 
-    class EndOfBattle1(effect: CardEffect): TimingEffect(effect, "End of Battle, first phase")
-    class UponDefeat1(effect: CardEffect): TimingEffect(effect, "Upon Defeat, first phase")
-    class EndOfBattle2(effect: CardEffect): TimingEffect(effect, "End of Battle, second phase")
-    class UponDefeat2(effect: CardEffect): TimingEffect(effect, "Upon Defeat, second phase")
-    class UponVictory(effect: CardEffect): TimingEffect(effect, "Upon Victory")
+    class EndOfBattle1(effect: CardEffect) : TimingEffect(effect, "End of Battle, first phase")
+    class UponDefeat1(effect: CardEffect) : TimingEffect(effect, "Upon Defeat, first phase")
+    class EndOfBattle2(effect: CardEffect) : TimingEffect(effect, "End of Battle, second phase")
+    class UponDefeat2(effect: CardEffect) : TimingEffect(effect, "Upon Defeat, second phase")
+    class UponVictory(effect: CardEffect) : TimingEffect(effect, "Upon Victory")
 
     class BattleEnd(val effect: CardEffect) : CardEffect("On Battle End") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
@@ -78,7 +80,11 @@ sealed class CardEffect(open val description: String) {
 
     // Wrapper Effects
 
-    class ConditionalEffect(private val conditional: Conditional, val onTrue: CardEffect? = null, val onFalse: CardEffect? = null) :
+    class ConditionalEffect(
+        private val conditional: Conditional,
+        val onTrue: CardEffect? = null,
+        val onFalse: CardEffect? = null
+    ) :
         CardEffect("Condition") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             val effect = if (conditional.checkCondition(DataSet(owner, opponent))) onTrue else onFalse
@@ -164,7 +170,7 @@ sealed class CardEffect(open val description: String) {
         }
     }
 
-    object NeutralizeOpponent: CardEffect("") {
+    object NeutralizeOpponent : CardEffect("") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             opponent.addBattleEffect(BattleEffects.Neutralized)
             return listOf(BattleStep.Neutralized(opponent))
@@ -174,13 +180,23 @@ sealed class CardEffect(open val description: String) {
     object Defensive : CardEffect("")
     object InstantDeath : CardEffect("")
 
-    class TargetPlayerDiscardsCards(val targetPlayer: TargetPlayer, val amount: IntCalculation): CardEffect("") {
+    class TargetPlayerDiscardsCards(val targetPlayer: TargetPlayer, val amount: IntCalculation) : CardEffect("") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             val data = DataSet(owner, opponent, owner?.owner, opponent.owner)
             val target = targetPlayer.resolve(data)
             val initialHandSize = target.cardsInHand.size
             val discardsCards = target.discardCardsFromHand(amount.calculate(data))
             return listOf(BattleStep.DiscardedCards(target, initialHandSize, discardsCards))
+        }
+    }
+
+    class TargetPlayerDrawsCards(val targetPlayer: TargetPlayer, val amount: IntCalculation) : CardEffect("") {
+        override fun trigger(opponent: CreatureCard): List<BattleStep> {
+            val data = DataSet(owner, opponent, owner?.owner, opponent.owner)
+            val target = targetPlayer.resolve(data)
+            val calculatedAmount = amount.calculate(data)
+            target.drawCardsFromDeck(calculatedAmount)
+            return listOf(BattleStep.DrawCards(target, calculatedAmount))
         }
     }
 

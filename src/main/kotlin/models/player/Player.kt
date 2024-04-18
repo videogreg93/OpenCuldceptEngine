@@ -23,6 +23,13 @@ class Player(
         cardsInHand.add(card)
     }
 
+    // todo what happens when there are no more cards in deck
+    fun drawCardsFromDeck(amount: Int = 1) {
+        repeat(amount) {
+            addCardToHand(library.removeFirst())
+        }
+    }
+
     /**
      * @return The amount of cards discarded
      */
