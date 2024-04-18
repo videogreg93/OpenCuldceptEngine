@@ -42,6 +42,7 @@ sealed class BattleStep(open val description: String = "") {
     // TODO change text
     class ConditionCheck(value: Boolean) : BattleStep("Condition evaluated to $value")
     class Neutralized(target: CreatureCard) : BattleStep("${target.name} has been neutralized")
+    class NeutralizedAttackFailed(target: CreatureCard): BattleStep("The attack failed because ${target.name} is neutralized")
     class Penetrates(target: CreatureCard) : BattleStep("${target.name} will penetrate")
     class CriticalHitBonus(target: CreatureCard) : BattleStep("${target.name} has critical hit")
 }

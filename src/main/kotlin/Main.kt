@@ -17,7 +17,7 @@ fun main(args: Array<String>) {
     val battle = engine.startBattle(
         CreatureCard(
             "Test Attacker",
-            30,
+            10,
             40,
             "",
             listOf(),
@@ -38,10 +38,10 @@ fun main(args: Array<String>) {
         player1,
         player2
     )
-    player2.addCardToHand(fireShield)
+    player2.addCardToHand(buckler)
     battle.goToItemSelection()
     battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
-    battle.setDefenderItemCard(Either.Left(fireShield))
+    battle.setDefenderItemCard(Either.Left(buckler))
     val result = battle.fight()
     result.getOrNull()?.let {
         it.steps.forEach {

@@ -242,6 +242,9 @@ class Battle(
             }
             defender.currentHP -= finalStrength.toInt()
         }
+        if (attacker.hasBattleEffect<BattleEffects.Neutralized>()) {
+            steps.add(BattleStep.NeutralizedAttackFailed(attacker))
+        }
 
         return steps
     }
