@@ -121,7 +121,15 @@ class Battle(
             else -> {
                 val orderedCreatures = calculateOrdering(attacker, defender)
 
-                // Modify Values (creature innate values)
+                // Modify values before battle
+                orderedCreatures.first.allEffects.filterIsInstance<CardEffect.BeforeBattle>().forEach {
+                    steps.addAll(it.trigger(orderedCreatures.second))
+                }
+                orderedCreatures.second.allEffects.filterIsInstance<CardEffect.BeforeBattle>().forEach {
+                    steps.addAll(it.trigger(orderedCreatures.first))
+                }
+
+                // Modify Values (creature innate values/battle start)
                 orderedCreatures.first.allEffects.filterIsInstance<CardEffect.BattleStart>().forEach {
                     steps.addAll(it.trigger(orderedCreatures.second))
                 }

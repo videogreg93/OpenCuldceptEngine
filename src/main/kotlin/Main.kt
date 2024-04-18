@@ -39,6 +39,7 @@ fun main(args: Array<String>) {
         player2
     )
     player2.addCardToHand(fireShield)
+    battle.goToItemSelection()
     battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
     battle.setDefenderItemCard(Either.Left(fireShield))
     val result = battle.fight()
@@ -47,5 +48,8 @@ fun main(args: Array<String>) {
             println(it.description)
         }
         println(it.endResult.description)
+    }
+    result.leftOrNull()?.let {
+        println(it)
     }
 }
