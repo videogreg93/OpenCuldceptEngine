@@ -24,7 +24,7 @@ val batteringRam = ItemCard(
         CardEffect.AttackBonus(
             CardEffect.ConditionalEffect(
                 Conditional.OpponentHasEffect(CardEffect.Defensive::class),
-                onTrue = CardEffect.SetOpponentHealth(0.toConstantCalculation()),
+                onTrue = CardEffect.SetOpponentHealth(0.toConstantCalculation()), // TODO maybe we need to use InstantDeath effect
                 onFalse = null
             )
         )

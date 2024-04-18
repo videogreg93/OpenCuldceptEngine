@@ -2,6 +2,7 @@ package engine.battle
 
 import models.cards.Card
 import models.cards.creature.CreatureCard
+import models.player.Player
 import utils.withSign
 
 sealed class BattleStep(open val description: String = "") {
@@ -45,4 +46,5 @@ sealed class BattleStep(open val description: String = "") {
     class NeutralizedAttackFailed(target: CreatureCard): BattleStep("The attack failed because ${target.name} is neutralized")
     class Penetrates(target: CreatureCard) : BattleStep("${target.name} will penetrate")
     class CriticalHitBonus(target: CreatureCard) : BattleStep("${target.name} has critical hit")
+    class DiscardedCards(target: Player, initialAmount: Int, amountDiscarded: Int): BattleStep("${target.name} ($initialAmount cards in hand) discarded $amountDiscarded cards.")
 }

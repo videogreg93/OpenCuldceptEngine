@@ -174,6 +174,16 @@ sealed class CardEffect(open val description: String) {
     object Defensive : CardEffect("")
     object InstantDeath : CardEffect("")
 
+    class TargetPlayerDiscardsCards(val targetPlayer: TargetPlayer, val amount: IntCalculation): CardEffect("") {
+        override fun trigger(opponent: CreatureCard): List<BattleStep> {
+            val data = DataSet(owner, opponent, owner?.owner, opponent.owner)
+            val target = targetPlayer.resolve(data)
+            val initialHandSize = target.cardsInHand.size
+            val discardsCards = target.discardCardsFromHand(amount.calculate(data))
+            return listOf(BattleStep.DiscardedCards(target, initialHandSize, discardsCards))
+        }
+    }
+
     companion object {
         fun landBonus(owner: CreatureCard) {
             owner.addEffect(

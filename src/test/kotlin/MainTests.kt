@@ -7,6 +7,8 @@ import io.kotest.matchers.shouldBe
 import models.cards.creature.CreatureCard
 import models.cards.effects.CardEffect
 import models.cards.effects.IntCalculation
+import models.cards.effects.TargetPlayer
+import models.cards.effects.toConstantCalculation
 import models.cards.item.ItemCard
 
 class MainTests : ShouldSpec({
@@ -128,8 +130,28 @@ class MainTests : ShouldSpec({
             result.getOrNull()!!.endResult shouldBe BattleResult.EndResult.DEFENDER_WINS
         }
     }
-}) {
-    fun getData(): String {
-        return ""
+    context("Player hand effects") {
+        should("Discard amount of cards") {
+            val data = Fixtures.getLeanData()
+            val engine = data.engine
+            val attacker = CreatureCard("Attacker", 10, 100, "", emptyList(), emptyList(), 1, 1).apply {
+                addEffect(
+                    CardEffect.AttackBonus(
+                        CardEffect.TargetPlayerDiscardsCards(TargetPlayer.Opponent, 6.toConstantCalculation())
+                    )
+                )
+            }
+            val defender = CreatureCard("Defender", 20, 100, "", emptyList(), emptyList(), 1, 1)
+            data.player2.cardsInHand.addAll(listOf(ItemCard("", 1, 1), ItemCard("", 1, 1), ItemCard("", 1, 1)))
+            val battle = engine.startBattle(attacker, defender, data.player1, data.player2)
+            battle.goToItemSelection()
+            battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
+            battle.setDefenderItemCard(Either.Right(ItemCard.EmptyItemCard))
+            data.player2.cardsInHand.size shouldBe 3
+            val result = battle.fight()
+            data.player2.cardsInHand.size shouldBe 0
+        }
     }
+}) {
+
 }

@@ -32,6 +32,11 @@ class Battle(
     private var damageDealtAttacker = 0
     private var damageDealtDefender = 0
 
+    init {
+        attacker.owner = attackingPlayer
+        defender.owner = defendingPlayer
+    }
+
     fun setAttackerItemCard(card: Either<ItemCard, ItemCard.EmptyItemCard>) {
         when (card) {
             is Either.Left -> {
