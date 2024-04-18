@@ -26,9 +26,9 @@ sealed class BattleStep(open val description: String = "") {
         val card: CreatureCard
     ) : BattleStep("${card.name} is defeated.")
 
-    class AttacksFirst(val card: CreatureCard) : BattleStep("${card.name} Attacks First Effect")
+    data class AttacksFirst(val card: CreatureCard) : BattleStep("${card.name} Attacks First Effect")
 
-    class AttacksLast(val card: CreatureCard) : BattleStep("${card.name} Attacks Last Effect")
+    data class AttacksLast(val card: CreatureCard) : BattleStep("${card.name} Attacks Last Effect")
 
     class ModifyAttack(receiver: CreatureCard, amount: Int, source: Card?) :
         BattleStep("${receiver.name} changes attack by $amount via ${source?.name} effect.")
