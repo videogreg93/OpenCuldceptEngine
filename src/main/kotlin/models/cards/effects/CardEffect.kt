@@ -66,6 +66,7 @@ sealed class CardEffect(open val description: String) {
         }
     }
 
+    // todo Replace with on sucessful attack, see battering ram
     class AttackBonus(val effect: CardEffect) : CardEffect("Attack Bonus") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             effect.owner = owner

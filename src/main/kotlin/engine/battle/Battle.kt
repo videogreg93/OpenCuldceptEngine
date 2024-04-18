@@ -1,10 +1,6 @@
 package engine.battle
 
 import arrow.core.Either
-import arrow.core.None
-import com.tinder.StateMachine
-import engine.battle.state.BattleStateMachine.Action
-import engine.battle.state.BattleStateMachine.State
 import models.cards.creature.CreatureCard
 import models.cards.effects.BattleEffects
 import models.cards.effects.CardEffect
@@ -131,50 +127,50 @@ class Battle(
                 // Ordering might change because of before battle effects (attacks first, attacks last)
                 orderedCreatures = calculateOrdering(attacker, defender)
 
-                // Proceed with battle
-                steps.add(
-                    BattleStep.CardAttacks(
-                        orderedCreatures.first,
-                        orderedCreatures.first.currentStrength,
-                        orderedCreatures.first == attacker
-                    )
-                )
-                val attackerDamageSteps = attemptToDamage(orderedCreatures.first, orderedCreatures.second)
-                steps.addAll(attackerDamageSteps)
-                // Trigger attacker bonus effects
-                orderedCreatures.first.allEffects.filterIsInstance<CardEffect.AttackBonus>().forEach {
-                    steps.addAll(it.trigger(orderedCreatures.second))
-                }
-                // todo Any hp == 0 should go to end of battle effects before checking who won or lost
-                if (orderedCreatures.second.currentHP <= 0) {
-                    handleDefenderDefeated(orderedCreatures)
-                } else if (orderedCreatures.first.currentHP <= 0) {
-                    handleAttackerDefeated(orderedCreatures)
+                // Someone could have died here, check now
+                if (anyCreatureIsDead()) {
+                    endOfBattleStep()
                 } else {
-                    // TODO add 'On Failed Attack' for the defender step here
+
+                    // Proceed with battle
                     steps.add(
                         BattleStep.CardAttacks(
-                            orderedCreatures.second,
-                            orderedCreatures.second.currentStrength,
-                            orderedCreatures.second == attacker
+                            orderedCreatures.first,
+                            orderedCreatures.first.currentStrength,
+                            orderedCreatures.first == attacker
                         )
                     )
-                    val defenderDamageSteps = attemptToDamage(orderedCreatures.second, orderedCreatures.first)
-                    steps.addAll(defenderDamageSteps)
-                    // Trigger defender attack bonus
-                    orderedCreatures.second.allEffects.filterIsInstance<CardEffect.AttackBonus>().forEach {
-                        steps.addAll(it.trigger(orderedCreatures.first))
+                    val attackerDamageSteps = attemptToDamage(orderedCreatures.first, orderedCreatures.second)
+                    steps.addAll(attackerDamageSteps)
+                    // Trigger attacker bonus effects
+                    orderedCreatures.first.allEffects.filterIsInstance<CardEffect.AttackBonus>().forEach {
+                        steps.addAll(it.trigger(orderedCreatures.second))
                     }
-                    if (orderedCreatures.first.currentHP <= 0) {
-                        handleAttackerDefeated(orderedCreatures)
-                    } else {
-                        // TODO add 'On Failed Attack' for the attack step here
-                        // TODO add 'End of Battle' for both cards step here
-                        Either.Right(BattleResult(steps, BattleResult.EndResult.STALEMATE))
+                    if (orderedCreatures.toList().all { it.currentHP > 0 }) {
+                        // Proceed to defender attack
+                        // TODO add 'On Failed Attack' for the defender step here
+                        steps.add(
+                            BattleStep.CardAttacks(
+                                orderedCreatures.second,
+                                orderedCreatures.second.currentStrength,
+                                orderedCreatures.second == attacker
+                            )
+                        )
+                        val defenderDamageSteps = attemptToDamage(orderedCreatures.second, orderedCreatures.first)
+                        steps.addAll(defenderDamageSteps)
+                        // Trigger defender attack bonus
+                        orderedCreatures.second.allEffects.filterIsInstance<CardEffect.AttackBonus>().forEach {
+                            steps.addAll(it.trigger(orderedCreatures.first))
+                        }
                     }
+                    endOfBattleStep()
                 }
             }
         }
+        return result
+    }
+
+    fun endOfBattleStep(): Either<BattleError, BattleResult> {
         // Trigger battle end effects
         attacker.effectsOfType<CardEffect.BattleEnd>().forEach {
             steps.addAll(it.trigger(defender))
@@ -183,38 +179,33 @@ class Battle(
             steps.addAll(it.trigger(attacker))
         }
         cleanup()
-        return result
-    }
-
-    private fun handleAttackerDefeated(orderedCreatures: Pair<CreatureCard, CreatureCard>): Either.Right<BattleResult> {
-        steps.add(
-            BattleStep.CardDefeated(orderedCreatures.first)
-        )
-        return Either.Right(
-            BattleResult(
-                steps, if (orderedCreatures.second == defender) {
-                    BattleResult.EndResult.DEFENDER_WINS
-                } else {
-                    BattleResult.EndResult.ATTACKER_WINS
-                }
+        return when {
+            attacker.currentHP <= 0 && defender.currentHP <= 0 -> Either.Right(
+                BattleResult(
+                    steps,
+                    BattleResult.EndResult.MUTUAL_DESTRUCTION
+                )
             )
-        )
-    }
 
-    private fun handleDefenderDefeated(orderedCreatures: Pair<CreatureCard, CreatureCard>): Either.Right<BattleResult> {
-        steps.add(
-            BattleStep.CardDefeated(orderedCreatures.second)
-        )
-        return Either.Right(
-            BattleResult(
-                steps,
-                if (orderedCreatures.first == attacker) {
-                    BattleResult.EndResult.ATTACKER_WINS
-                } else {
-                    BattleResult.EndResult.DEFENDER_WINS
-                }
+            attacker.currentHP > 0 && defender.currentHP > 0 -> Either.Right(
+                BattleResult(
+                    steps,
+                    BattleResult.EndResult.STALEMATE
+                )
             )
-        )
+
+            defender.currentHP <= 0 -> {
+                steps.add(BattleStep.CardDefeated(defender))
+                Either.Right(BattleResult(steps, BattleResult.EndResult.ATTACKER_WINS))
+            }
+
+            attacker.currentHP <= 0 -> {
+                steps.add(BattleStep.CardDefeated(attacker))
+                Either.Right(BattleResult(steps, BattleResult.EndResult.DEFENDER_WINS))
+            }
+
+            else -> Either.Left(BattleError.CouldNotDetermineBattleOutcome)
+        }
     }
 
     // TODO handle scroll
@@ -225,6 +216,7 @@ class Battle(
                 steps.add(BattleStep.CriticalHitBonus(attacker))
                 attacker.currentStrength * BattleEffects.CriticalHit.multiplier
             }
+
             else -> attacker.currentStrength.toFloat()
         }
         if (attacker.hasBattleEffect<BattleEffects.Reflected>()) {
@@ -243,6 +235,10 @@ class Battle(
         }
 
         return steps
+    }
+
+    private fun anyCreatureIsDead(): Boolean {
+        return attacker.currentHP <= 0 || defender.currentHP <= 0
     }
 
     /**

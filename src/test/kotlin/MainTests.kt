@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import models.cards.creature.CreatureCard
 import models.cards.effects.CardEffect
+import models.cards.effects.IntCalculation
 import models.cards.item.ItemCard
 
 class MainTests : ShouldSpec({
@@ -44,6 +45,20 @@ class MainTests : ShouldSpec({
             battle.setDefenderItemCard(Either.Right(ItemCard.EmptyItemCard))
             val result = battle.fight()
             result.getOrNull()!!.endResult shouldBe BattleResult.EndResult.STALEMATE
+        }
+        should("Mutual Destruction") {
+            val data = Fixtures.getLeanData()
+            val engine = data.engine
+            val attacker = CreatureCard("Attacker", 10, 10, "", emptyList(), emptyList(), 1, 1)
+            val defender = CreatureCard("Defender", 20, 10, "", emptyList(), emptyList(), 1, 1).apply {
+                addEffect(CardEffect.BattleEnd(CardEffect.ModifyOpponentHealth(IntCalculation.Constant(-20))))
+            }
+            val battle = engine.startBattle(attacker, defender, data.player1, data.player2)
+            battle.goToItemSelection()
+            battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
+            battle.setDefenderItemCard(Either.Right(ItemCard.EmptyItemCard))
+            val result = battle.fight()
+            result.getOrNull()!!.endResult shouldBe BattleResult.EndResult.MUTUAL_DESTRUCTION
         }
     }
     context("Timing Effects") {
@@ -97,6 +112,20 @@ class MainTests : ShouldSpec({
             result.getOrNull()?.let {
                 it.endResult shouldBe BattleResult.EndResult.ATTACKER_WINS
             }
+        }
+        should("Kill attacker before he kills defender") {
+            val data = Fixtures.getLeanData()
+            val engine = data.engine
+            val attacker = CreatureCard("Attacker", 10, 10, "", emptyList(), emptyList(), 1, 1)
+            val defender = CreatureCard("Defender", 20, 10, "", emptyList(), emptyList(), 1, 1).apply {
+                addEffect(CardEffect.BeforeBattle(CardEffect.ModifyOpponentHealth(IntCalculation.Constant(-20))))
+            }
+            val battle = engine.startBattle(attacker, defender, data.player1, data.player2)
+            battle.goToItemSelection()
+            battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
+            battle.setDefenderItemCard(Either.Right(ItemCard.EmptyItemCard))
+            val result = battle.fight()
+            result.getOrNull()!!.endResult shouldBe BattleResult.EndResult.DEFENDER_WINS
         }
     }
 }) {
