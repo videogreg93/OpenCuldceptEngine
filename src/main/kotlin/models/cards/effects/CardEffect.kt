@@ -62,6 +62,7 @@ sealed class CardEffect(open val description: String) {
     class UponDefeat2(effect: CardEffect) : TimingEffect(effect, "Upon Defeat, second phase")
     class UponVictory(effect: CardEffect) : TimingEffect(effect, "Upon Victory")
 
+    // TODO replace with endOfBattle1
     class BattleEnd(val effect: CardEffect) : CardEffect("On Battle End") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             effect.owner = owner

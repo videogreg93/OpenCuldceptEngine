@@ -89,7 +89,7 @@ class CreatureCard(
      */
     fun resetValues() {
         currentStrength = baseStrength // TODO add ongoing modifiers, like permanent buffs or whatever
-        currentHP = min(currentHP, healthBeforeBattle)
+        currentHP = min(currentHP, healthBeforeBattle) // TODO this resets if the creature goes back to their hand
         currentBattleEffects.clear()
         addedEffects.clear()
     }

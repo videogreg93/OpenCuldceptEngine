@@ -193,6 +193,22 @@ class Battle(
         defender.effectsOfType<CardEffect.BattleEnd>().forEach {
             steps.addAll(it.trigger(attacker))
         }
+        if (attacker.isDestroyed) {
+            steps.addAll(attacker.effectsOfType<CardEffect.UponDefeat1>().triggerAll(defender))
+        }
+        if (defender.isDestroyed) {
+            steps.addAll(defender.effectsOfType<CardEffect.UponDefeat1>().triggerAll(attacker))
+        }
+        // End of battle 2 effects
+        steps.addAll(attacker.effectsOfType<CardEffect.EndOfBattle2>().triggerAll(defender))
+        steps.addAll(defender.effectsOfType<CardEffect.EndOfBattle2>().triggerAll(attacker))
+        // Upon Defeat 2 effects
+        if (attacker.isDestroyed) {
+            steps.addAll(attacker.effectsOfType<CardEffect.UponDefeat2>().triggerAll(defender))
+        }
+        if (defender.isDestroyed) {
+            steps.addAll(defender.effectsOfType<CardEffect.UponDefeat2>().triggerAll(attacker))
+        }
         cleanup()
         return when {
             attacker.currentHP <= 0 && defender.currentHP <= 0 -> Either.Right(
@@ -211,11 +227,13 @@ class Battle(
 
             defender.currentHP <= 0 -> {
                 steps.add(BattleStep.CardDefeated(defender))
+                steps.addAll(attacker.effectsOfType<CardEffect.UponVictory>().triggerAll(defender))
                 Either.Right(BattleResult(steps, BattleResult.EndResult.ATTACKER_WINS))
             }
 
             attacker.currentHP <= 0 -> {
                 steps.add(BattleStep.CardDefeated(attacker))
+                steps.addAll(defender.effectsOfType<CardEffect.UponVictory>().triggerAll(attacker))
                 Either.Right(BattleResult(steps, BattleResult.EndResult.DEFENDER_WINS))
             }
 
