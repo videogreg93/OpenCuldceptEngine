@@ -200,6 +200,15 @@ sealed class CardEffect(open val description: String) {
         }
     }
 
+    class RecycleToOwnersHand(): CardEffect("") {
+        override fun trigger(opponent: CreatureCard): List<BattleStep> {
+            source?.let {
+                owner?.owner?.addCardToHand(it)
+            }
+            return listOf(BattleStep.Recycle(owner?.owner, source))
+        }
+    }
+
     companion object {
         fun landBonus(owner: CreatureCard) {
             owner.addEffect(

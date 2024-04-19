@@ -48,4 +48,5 @@ sealed class BattleStep(open val description: String = "") {
     class CriticalHitBonus(target: CreatureCard) : BattleStep("${target.name} has critical hit")
     class DiscardedCards(target: Player, initialAmount: Int, amountDiscarded: Int): BattleStep("${target.name} ($initialAmount cards in hand) discarded $amountDiscarded cards.")
     class DrawCards(target: Player, amount: Int): BattleStep("${target.name} drew $amount cards from deck")
+    class Recycle(target: Player?, card: Card?): BattleStep("${target?.name} recycles ${card?.name} back to hand.")
 }

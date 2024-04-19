@@ -82,3 +82,16 @@ val angryMask = ItemCard(
         )
     )
 }
+
+val boomerang = ItemCard(
+    "Boomerang",
+    40,
+    1,
+    type = ItemType.Tool
+).apply {
+    addEffect(CardEffect.BeforeBattle(CardEffect.ModifyOwnerAttack(20.toConstantCalculation())))
+    addEffect(CardEffect.BeforeBattle(CardEffect.ModifyOwnerHealth(10.toConstantCalculation())))
+    addEffect(
+        CardEffect.BattleEnd(CardEffect.RecycleToOwnersHand())
+    )
+}
