@@ -95,3 +95,12 @@ val boomerang = ItemCard(
         CardEffect.BattleEnd(CardEffect.RecycleToOwnersHand())
     )
 }
+
+val counterAmulet = ItemCard(
+    "Counter Amulet",
+    100,
+    1,
+    type = ItemType.Tool
+).apply {
+    addEffect(CardEffect.BeforeBattle(CardEffect.SetOwnerIntVariable(CreatureCard::currentStrength, 0.toConstantCalculation())))
+}

@@ -3,6 +3,8 @@ package models.cards.effects
 import engine.battle.BattleStep
 import models.cards.Card
 import models.cards.creature.CreatureCard
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty1
 
 // TODO change the trigger callback to take a dataset, which can more easily created it
 sealed class CardEffect(open val description: String) {
@@ -98,6 +100,18 @@ sealed class CardEffect(open val description: String) {
     }
 
     // End Wrapper Effects
+    class SetOwnerIntVariable(val variable: KMutableProperty1<CreatureCard, Int>, val amount: IntCalculation): CardEffect("") {
+        override val description: String
+            get() = "Set ${owner?.name}'s ${variable.name} to ${amount.simpleAmount}"
+
+        override fun trigger(opponent: CreatureCard): List<BattleStep> {
+            return owner?.let {
+                variable.set(it, amount.calculate(DataSet(owner, opponent, owner?.owner, opponent.owner)))
+                listOf()
+            } ?: error("No owner found for $this")
+        }
+    }
+
     class ModifyOwnerAttack(val amount: IntCalculation) : CardEffect("") {
         override val description: String
             get() = "Modify ${owner?.name} attack by ${amount.simpleAmount}"
@@ -106,7 +120,7 @@ sealed class CardEffect(open val description: String) {
             return owner?.let {
                 val value = amount.calculate(DataSet(owner, opponent))
                 it.currentStrength += value
-                listOf(BattleStep.ModifyAttack(it, value, source))
+                listOf(BattleStep.ModifyCreatureValue(description))
             } ?: error("No owner found for $this")
         }
     }
@@ -174,6 +188,13 @@ sealed class CardEffect(open val description: String) {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             opponent.addBattleEffect(BattleEffects.Neutralized)
             return listOf(BattleStep.Neutralized(opponent))
+        }
+    }
+
+    object Reflect : CardEffect("") {
+        override fun trigger(opponent: CreatureCard): List<BattleStep> {
+            opponent.addBattleEffect(BattleEffects.Reflected())
+            return listOf(BattleStep.Reflected())
         }
     }
 

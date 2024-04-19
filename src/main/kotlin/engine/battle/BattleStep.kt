@@ -31,6 +31,8 @@ sealed class BattleStep(open val description: String = "") {
 
     data class AttacksLast(val card: CreatureCard) : BattleStep("${card.name} Attacks Last Effect")
 
+    class ModifyCreatureValue(d: String): BattleStep(d)
+
     class ModifyAttack(receiver: CreatureCard, amount: Int, source: Card?) :
         BattleStep("${receiver.name} changes attack by $amount via ${source?.name} effect.")
 
@@ -49,4 +51,7 @@ sealed class BattleStep(open val description: String = "") {
     class DiscardedCards(target: Player, initialAmount: Int, amountDiscarded: Int): BattleStep("${target.name} ($initialAmount cards in hand) discarded $amountDiscarded cards.")
     class DrawCards(target: Player, amount: Int): BattleStep("${target.name} drew $amount cards from deck")
     class Recycle(target: Player?, card: Card?): BattleStep("${target?.name} recycles ${card?.name} back to hand.")
+    class Reflected() : BattleStep("Damage will be reflected") {
+
+    }
 }
