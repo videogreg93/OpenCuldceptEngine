@@ -102,5 +102,12 @@ val counterAmulet = ItemCard(
     1,
     type = ItemType.Tool
 ).apply {
-    addEffect(CardEffect.BeforeBattle(CardEffect.SetOwnerIntVariable(CreatureCard::currentStrength, 0.toConstantCalculation())))
+    addEffect(
+        CardEffect.BeforeBattle(
+            CardEffect.SetOwnerIntVariable(
+                CreatureCard::currentStrength,
+                0.toConstantCalculation()
+            )
+        )
+    )
 }

@@ -1,19 +1,27 @@
 package models.cards.effects
 
 import engine.battle.BattleStep
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import models.cards.Card
 import models.cards.creature.CreatureCard
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
 
 // TODO change the trigger callback to take a dataset, which can more easily created it
-sealed class CardEffect(open val description: String) {
+@Serializable
+sealed class CardEffect() {
+    open val description: String = ""
+    @Transient
     var source: Card? = null
+    @Transient
     var owner: CreatureCard? = null
 
     // TODO this isnt used now, need to find a sure way of setting this correctly during fight
+    @Transient
     lateinit var dataSet: DataSet
-    open val priority: Int = 0 // lower priority = triggered first
+    open var priority: Int = 0 // lower priority = triggered first
 
     open fun trigger(opponent: CreatureCard): List<BattleStep> = emptyList()
 
@@ -24,6 +32,9 @@ sealed class CardEffect(open val description: String) {
         }
     }
 
+    // todo delete, this is for testing serialization
+    constructor(s: String): this()
+
     class AttackLast : CardEffect("Attack Last") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             owner?.attackLast = true
@@ -32,7 +43,11 @@ sealed class CardEffect(open val description: String) {
     }
 
     // Timing Effects
-    abstract class TimingEffect(val effect: CardEffect, description: String) : CardEffect(description) {
+    @Serializable
+    sealed class TimingEffect() : CardEffect() {
+        constructor(effect: CardEffect, s: String) : this()
+        abstract val effect: CardEffect
+
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             effect.owner = owner
             effect.source = source
@@ -43,26 +58,38 @@ sealed class CardEffect(open val description: String) {
     // Before Combat
     // See here for timing information https://www.culdceptcentral.com/culdcept-revolt/culdcept-revolt-guides/culdcept-revolt-battle-timetable
 
-    class BeforeItemSelection(effect: CardEffect) : TimingEffect(effect, "Before Item Selection")
-    class DuringItemSelection(effect: CardEffect) : TimingEffect(effect, "During Item Selection")
-    class BeforeBattle(effect: CardEffect) : TimingEffect(effect, "Before Battle")
+    @Serializable
+    class BeforeItemSelection(override val effect: CardEffect) : TimingEffect()
+    @Serializable
+    class DuringItemSelection(override val effect: CardEffect) : TimingEffect()
+    @Serializable
+    class BeforeBattle(override val effect: CardEffect) : TimingEffect()
 
     // Combat Timing Effects
-
-    class BeforeAttackPhase(effect: CardEffect) : TimingEffect(effect, "Before Attack Phase")
-    class BeforeDamageCalculation(effect: CardEffect) : TimingEffect(effect, "Before Damage Calculation")
-    class OnSuccessfulAttack(effect: CardEffect) : TimingEffect(effect, "On Successful Attack")
-    class OnFailedAttack(effect: CardEffect) : TimingEffect(effect, "On Failed Attack")
+    @Serializable
+    class BeforeAttackPhase(override val effect: CardEffect) : TimingEffect(effect, "Before Attack Phase")
+    @Serializable
+    class BeforeDamageCalculation(override val effect: CardEffect) : TimingEffect(effect, "Before Damage Calculation")
+    @Serializable
+    class OnSuccessfulAttack(override val effect: CardEffect) : TimingEffect(effect, "On Successful Attack")
+    @Serializable
+    class OnFailedAttack(override val effect: CardEffect) : TimingEffect(effect, "On Failed Attack")
 
     // End of Battle
 
-    class EndOfBattle1(effect: CardEffect) : TimingEffect(effect, "End of Battle, first phase")
-    class UponDefeat1(effect: CardEffect) : TimingEffect(effect, "Upon Defeat, first phase")
-    class EndOfBattle2(effect: CardEffect) : TimingEffect(effect, "End of Battle, second phase")
-    class UponDefeat2(effect: CardEffect) : TimingEffect(effect, "Upon Defeat, second phase")
-    class UponVictory(effect: CardEffect) : TimingEffect(effect, "Upon Victory")
+    @Serializable
+    class EndOfBattle1(override val effect: CardEffect) : TimingEffect(effect, "End of Battle, first phase")
+    @Serializable
+    class UponDefeat1(override val effect: CardEffect) : TimingEffect(effect, "Upon Defeat, first phase")
+    @Serializable
+    class EndOfBattle2(override val effect: CardEffect) : TimingEffect(effect, "End of Battle, second phase")
+    @Serializable
+    class UponDefeat2(override val effect: CardEffect) : TimingEffect(effect, "Upon Defeat, second phase")
+    @Serializable
+    class UponVictory(override val effect: CardEffect) : TimingEffect(effect, "Upon Victory")
 
     // TODO replace with endOfBattle1
+    @Serializable
     class BattleEnd(val effect: CardEffect) : CardEffect("On Battle End") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             effect.owner = owner
@@ -72,6 +99,7 @@ sealed class CardEffect(open val description: String) {
     }
 
     // todo Replace with on sucessful attack, see battering ram
+    @Serializable
     class AttackBonus(val effect: CardEffect) : CardEffect("Attack Bonus") {
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
             effect.owner = owner
@@ -83,6 +111,7 @@ sealed class CardEffect(open val description: String) {
 
     // Wrapper Effects
 
+    @Serializable
     class ConditionalEffect(
         private val conditional: Conditional,
         val onTrue: CardEffect? = null,
@@ -102,7 +131,7 @@ sealed class CardEffect(open val description: String) {
 
     // End Wrapper Effects
     class SetOwnerIntVariable(val variable: KMutableProperty1<CreatureCard, Int>, val amount: IntCalculation): CardEffect("") {
-        override val description: String
+        override var description: String = ""
             get() = "Set ${owner?.name}'s ${variable.name} to ${amount.simpleAmount}"
 
         override fun trigger(opponent: CreatureCard): List<BattleStep> {
@@ -126,6 +155,7 @@ sealed class CardEffect(open val description: String) {
         }
     }
 
+    @Serializable
     class ModifyOwnerHealth(val amount: IntCalculation) : CardEffect("") {
         override val description: String
             get() = "Modify ${owner?.name} health by ${amount.simpleAmount}"
@@ -139,6 +169,7 @@ sealed class CardEffect(open val description: String) {
         }
     }
 
+    @Serializable
     class ModifyOpponentHealth(val amount: IntCalculation) : CardEffect("") {
         override val description: String
             get() = "Modify opponent's health by ${amount.simpleAmount}"

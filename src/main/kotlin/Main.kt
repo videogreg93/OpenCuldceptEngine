@@ -1,7 +1,14 @@
 import arrow.core.Either
 import engine.CuldceptEngine
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+import models.cards.Card
 import models.cards.angryMask
 import models.cards.creature.CreatureCard
+import models.cards.effects.CardEffect
 import models.cards.item.ItemCard
 import models.player.Player
 
@@ -39,6 +46,11 @@ fun main(args: Array<String>) {
         player1,
         player2
     )
+
+    val s = Json {
+        prettyPrint = true
+    }.encodeToString(angryMask)
+    println(s)
     player2.addCardToHand(angryMask)
     battle.goToItemSelection()
     battle.setAttackerItemCard(Either.Right(ItemCard.EmptyItemCard))
