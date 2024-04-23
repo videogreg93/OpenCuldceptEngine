@@ -1,9 +1,11 @@
 package models.cards.item
 
+import kotlinx.serialization.Serializable
 import models.cards.Card
 import models.cards.creature.CreatureCard
 import models.cards.effects.CardEffect
 
+@Serializable
 class ItemCard(
     override val name: String,
     override val baseCost: Int,

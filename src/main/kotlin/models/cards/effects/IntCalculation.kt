@@ -1,11 +1,13 @@
 package models.cards.effects
 
+import kotlinx.serialization.Serializable
 import models.cards.creature.CreatureCard
 import kotlin.reflect.KProperty1
 
 /**
  * Knows how to calculate a value for a [CardEffect]
  */
+@Serializable
 sealed class IntCalculation {
     abstract val simpleAmount: String
     abstract fun calculate(
@@ -16,6 +18,7 @@ sealed class IntCalculation {
         return simpleAmount
     }
 
+    @Serializable
     class Constant(val amount: Int) : IntCalculation() {
         override val simpleAmount: String
             get() = amount.toString()
@@ -25,6 +28,7 @@ sealed class IntCalculation {
         }
     }
 
+    @Serializable
     class Inverted(val original: IntCalculation): IntCalculation() {
         override val simpleAmount: String
             get() = "inverted"
@@ -62,6 +66,7 @@ sealed class IntCalculation {
         }
     }
 
+    @Serializable
     object OpponentDamageDealt : IntCalculation() {
         override val simpleAmount: String
             get() = "Damage opponent dealt"
